@@ -8,6 +8,7 @@ from datetime import datetime
 
 app = FastAPI(title="BİLSEM AI CAD Service")
 
+app.mount("/outputs-static", StaticFiles(directory="outputs"), name="outputs")
 app.mount("/explorer", StaticFiles(directory="static/explorer", html=True), name="explorer")
 
 app.add_middleware(
