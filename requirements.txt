@@ -5,3 +5,4 @@ build123d
 anthropic
 aiofiles
 boto3
+httpx

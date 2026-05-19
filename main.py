@@ -1,4 +1,6 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi.responses import Response
+import httpx
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -119,6 +121,7 @@ def generate_cad(job_id, prompt):
 
         if os.path.exists(step_path):
             dims = parse_dimensions(prompt)
+            r2_pub = "https://pub-2a3882ed7b354e8aaf2c9811ec22def0.r2.dev"
             stl_url = upload_to_r2(stl_path, f"{job_id}/model.stl") if os.path.exists(stl_path) else None
             step_url = upload_to_r2(step_path, f"{job_id}/model.step")
             JOBS[job_id]["status"] = "done"
@@ -161,6 +164,18 @@ async def download(job_id: str, fmt: str):
     if not path or not os.path.exists(path):
         raise HTTPException(404, f"{fmt} dosyası henüz hazır değil.")
     return FileResponse(path, filename=f"model_{job_id}.{fmt}")
+
+@app.get("/r2/{job_id}/{fmt}")
+async def r2_proxy(job_id: str, fmt: str):
+    r2_url = f"https://pub-2a3882ed7b354e8aaf2c9811ec22def0.r2.dev/{job_id}/model.{fmt}"
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.get(r2_url)
+        media = "model/stl" if fmt=="stl" else "application/octet-stream"
+        return Response(content=r.content, media_type=media,
+            headers={"Access-Control-Allow-Origin": "*", "Content-Disposition": f"attachment; filename=model.{fmt}"})
+    except Exception as e:
+        raise HTTPException(500, str(e))
 
 @app.get("/health")
 async def health():
