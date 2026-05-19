@@ -1,11 +1,14 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uuid, os, re, subprocess
 from datetime import datetime
 
 app = FastAPI(title="BİLSEM AI CAD Service")
+
+app.mount("/explorer", StaticFiles(directory="static/explorer", html=True), name="explorer")
 
 app.add_middleware(
     CORSMiddleware,
